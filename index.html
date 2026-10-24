@@ -2336,6 +2336,8 @@
     const PRESETS = {
       '随机': {
         preset: '随机',
+        description: '不设偏好，遇到什么算什么',
+        descriptionEn: 'No set preference. Whatever comes, comes.',
         social: '不限',
         outing: '不限',
         movement: '不限',
@@ -2346,6 +2348,8 @@
       },
       '独处恢复型': {
         preset: '独处恢复型',
+        description: '我需要一个人静静',
+        descriptionEn: 'I need some quiet time to myself',
         social: '独处恢复',
         outing: '低',
         movement: '很低',
@@ -2356,6 +2360,8 @@
       },
       '小群体可型': {
         preset: '小群体可型',
+        description: '低强度社交',
+        descriptionEn: 'Low-key social energy',
         social: '小群体可以',
         outing: '中',
         movement: '只接受走路',
@@ -2366,6 +2372,8 @@
       },
       '热闹也行型': {
         preset: '热闹也行型',
+        description: '和朋友聊聊，出去遛遛吧',
+        descriptionEn: 'Chat with friends and wander outside',
         social: '热闹也行',
         outing: '高',
         movement: '可以轻运动',
@@ -3715,8 +3723,8 @@ M10|通知静音|静音一个非必要群或App|1|点完成|低电量|任意|零
             <div class="settings-body">
               <div class="preset-list">
                 ${Object.entries(PRESETS).map(([name, preset]) => {
-                  const zh = name === '随机' ? '所有类别等概率出现，不套用偏好' : `${preset.preferences.join(' · ')}　${preset.workMinutes} 分钟 / ${preset.restMinutes} 分钟`;
-                  const en = name === '随机' ? 'All categories equally likely; no preference filtering' : `${preset.preferences.map(item => CATEGORY_EN[item]).join(' · ')} · ${preset.workMinutes} min weekdays / ${preset.restMinutes} min weekends`;
+                  const zh = preset.description;
+                  const en = preset.descriptionEn;
                   return `
                     <label class="preset">
                       <input type="radio" name="preset" value="${name}" ${profile.preset === name ? 'checked' : ''}>
