@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Download latest self-contained app
-        run: curl -fsSL 'https://d2ol7oe51mr4n9.cloudfront.net/user_3JDJFGyY4yNN3C1qJ5qLbS94dFR/fc35056b-eac0-4f35-9a6c-069b0d914bca.html' -o index.html
+        run: curl -fsSL 'https://d2ol7oe51mr4n9.cloudfront.net/user_3JDJFGyY4yNN3C1qJ5qLbS94dFR/77afcea7-f4b2-400f-a026-8f0e2aeaa54c.html' -o index.html
       - name: Commit app
         run: |
           git config user.name 'github-actions[bot]'
