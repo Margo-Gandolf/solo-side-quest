@@ -4088,7 +4088,7 @@ M10|把灯调暗|睡前把主要灯光调暗，或只留一盏小灯|1|点完成
               </div>
             </div>
           </article>` : `
-          <article class="simple-task is-main task-hidden ${mainDone ? 'is-done' : ''} ${ui.rollingTaskId === mainTask.id ? 'is-rolling' : ''}" aria-busy="${ui.rollingTaskId === mainTask.id}">
+          <article class="simple-task is-main task-hidden ${mainDone ? 'is-done' : ''} ${ui.rollingTaskId === mainTask.id ? 'is-rolling' : ''}" id="task-card-${mainTask.id}" tabindex="-1" aria-busy="${ui.rollingTaskId === mainTask.id}">
             <button class="task-cover" data-action="reveal-task" data-task-id="${mainTask.id}" aria-label="揭晓主线任务">
               <span class="task-cover-copy">
                 <span class="task-cover-kicker">主线任务${mainDone ? ' · 已完成' : ''}</span>
@@ -4124,7 +4124,7 @@ M10|把灯调暗|睡前把主要灯光调暗，或只留一盏小灯|1|点完成
                     </div>
                   </div>
                 </article>` : `
-                <article class="simple-task micro-task task-hidden ${isDone ? 'is-done' : ''} ${ui.rollingTaskId === t.id ? 'is-rolling' : ''}" aria-busy="${ui.rollingTaskId === t.id}">
+                <article class="simple-task micro-task task-hidden ${isDone ? 'is-done' : ''} ${ui.rollingTaskId === t.id ? 'is-rolling' : ''}" id="task-card-${t.id}" tabindex="-1" aria-busy="${ui.rollingTaskId === t.id}">
                   <button class="task-cover" data-action="reveal-task" data-task-id="${t.id}" aria-label="揭晓小任务 ${index + 1}">
                     <span class="task-cover-copy">
                       <span class="task-cover-kicker">小任务 0${index + 1}${isDone ? ' · 已完成' : ''}</span>
@@ -4163,7 +4163,7 @@ M10|把灯调暗|睡前把主要灯光调暗，或只留一盏小灯|1|点完成
                       </div>
                     </div>
                   </article>` : `
-                  <article class="simple-task micro-task extra-task task-hidden ${isDone ? 'is-done' : ''} ${ui.rollingTaskId === t.id ? 'is-rolling' : ''}" aria-busy="${ui.rollingTaskId === t.id}">
+                  <article class="simple-task micro-task extra-task task-hidden ${isDone ? 'is-done' : ''} ${ui.rollingTaskId === t.id ? 'is-rolling' : ''}" id="task-card-${t.id}" tabindex="-1" aria-busy="${ui.rollingTaskId === t.id}">
                     <button class="task-cover" data-action="reveal-task" data-task-id="${t.id}" aria-label="揭晓加抽任务 ${index + 1}">
                       <span class="task-cover-copy">
                         <span class="task-cover-kicker">加抽任务 ${String(index + 1).padStart(2, '0')}${isDone ? ' · 已完成' : ''}</span>
@@ -4628,7 +4628,7 @@ M10|把灯调暗|睡前把主要灯光调暗，或只留一盏小灯|1|点完成
       return layout(settingsContent());
     }
 
-    function render() {
+    function render(options = {}) {
       const app = document.getElementById('app');
       ensureToday();
       const views = {
@@ -4642,8 +4642,13 @@ M10|把灯调暗|睡前把主要灯光调暗，或只留一盏小灯|1|点完成
       applyBilingualText(app);
       applyLanguage();
       requestAnimationFrame(() => {
-        const active = document.querySelector('.nav-btn.is-active');
-        if (ui.page === 'today' && !document.querySelector('.overlay')) window.scrollTo({ top: 0, behavior: 'instant' });
+        if (ui.page !== 'today' || document.querySelector('.overlay')) return;
+        const target = options.scrollTaskId ? document.getElementById(`task-card-${options.scrollTaskId}`) : null;
+        if (target) {
+          target.scrollIntoView({ block: 'center', behavior: 'instant' });
+        } else {
+          window.scrollTo({ top: 0, behavior: 'instant' });
+        }
       });
     }
 
@@ -4783,14 +4788,14 @@ M10|把灯调暗|睡前把主要灯光调暗，或只留一盏小灯|1|点完成
     function beginTaskReveal(taskId) {
       if (!taskId || !TASK_BY_ID[taskId] || ui.rollingTaskId) return;
       ui.rollingTaskId = taskId;
-      render();
+      render({ scrollTaskId: taskId });
       clearTimeout(ui.rollTimer);
       const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
       ui.rollTimer = setTimeout(() => {
         if (ui.rollingTaskId !== taskId) return;
         ui.revealedTaskIds.add(taskId);
         ui.rollingTaskId = null;
-        render();
+        render({ scrollTaskId: taskId });
         requestAnimationFrame(() => document.getElementById(`task-card-${taskId}`)?.focus({ preventScroll: true }));
       }, reduceMotion ? 80 : 760);
     }
