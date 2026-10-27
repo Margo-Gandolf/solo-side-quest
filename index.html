@@ -3004,6 +3004,39 @@ details > summary h3,
 </style>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-regular.css">
+<style>
+    /* 记录详情 */
+    .record { cursor: pointer; transition: transform .12s ease, box-shadow .12s ease; }
+    .record:hover { box-shadow: var(--shadow-soft); }
+    .record:active { transform: scale(.995); }
+    .record-sheet .record-detail-desc {
+      margin: 2px 0 12px;
+      color: var(--ink-soft);
+      font-size: 13px;
+      line-height: 1.75;
+    }
+    .record-detail-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-bottom: 12px;
+    }
+    .record-detail-meta span {
+      padding: 4px 10px;
+      border-radius: 999px;
+      color: var(--forest);
+      background: var(--surface-soft);
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .record-detail-photo {
+      display: block;
+      width: 100%;
+      margin-top: 12px;
+      border-radius: 14px;
+      object-fit: cover;
+    }
+</style>
 </head>
 <body>
 <div id="pi" role="presentation">
@@ -3113,7 +3146,7 @@ details > summary h3,
       '从任务池里抽一张': 'Picking one from the task pool',
       '已完成': 'Completed',
       '完成': 'Done',
-      '做完了': 'Done',
+      '搞定': 'Done',
       '换一个': 'Swap',
       '当前做不了': 'Not possible now',
       '今天换过了': 'Already swapped',
@@ -3901,6 +3934,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
       rollTimer: null,
       calendarMonth: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
       selectedRecordDate: dateKey(),
+      recordViewKey: null,
       completion: { taskId: null, quickPhrase: '', note: '', photo: '' },
       locationTaskId: null,
       clearArmed: false,
@@ -4322,7 +4356,8 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
         </div>
         ${noNav ? '' : bottomNav()}
         ${renderCompletionSheet()}
-        ${renderLocationSheet()}`;
+        ${renderLocationSheet()}
+        ${renderRecordSheet()}`;
     }
 
     function todayView() {
@@ -4363,7 +4398,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
               <div class="simple-task-actions">
                 ${mainDone
                   ? `<span class="done-badge">${icon('check', 18)} 已完成，今天这里收好</span>`
-                  : `<button class="btn btn-primary" data-action="open-complete" data-task-id="${mainTask.id}">${icon('check', 18)} 做完了</button>`}
+                  : `<button class="btn btn-primary" data-action="open-complete" data-task-id="${mainTask.id}">${icon('check', 18)} 搞定</button>`}
                 ${mainDone
                   ? ''
                   : `<button class="tiny-action" data-action="reroll">${icon('refresh', 15)} 换一个</button>
@@ -4536,6 +4571,42 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
         </div>`;
     }
 
+    function renderRecordSheet() {
+      if (!ui.recordViewKey) return '';
+      const record = state.records.find(r => r.createdAt === ui.recordViewKey);
+      if (!record) return '';
+      const t = task(record.taskId);
+      const when = record.createdAt ? new Date(record.createdAt) : null;
+      const timeText = when && !isNaN(when)
+        ? `${String(when.getHours()).padStart(2, '0')}:${String(when.getMinutes()).padStart(2, '0')}`
+        : '';
+      const kindText = record.kind === 'extra'
+        ? '加抽任务'
+        : (record.kind === 'anchor' || record.taskId.startsWith('M')) ? '随机小任务' : '主线任务';
+      return `
+        <div class="overlay" data-action="close-record">
+          <section class="sheet record-sheet" role="dialog" aria-modal="true" aria-labelledby="record-title" data-stop-close>
+            <div class="sheet-head">
+              <div>
+                <p class="eyebrow">${formatDate(record.date, true)}${timeText ? ' · ' + timeText : ''}</p>
+                <h2 id="record-title">${escapeHTML(t.name)}</h2>
+                <p class="record-en">${escapeHTML(t.enName)}</p>
+              </div>
+              <button class="icon-btn" type="button" data-action="close-record" aria-label="关闭">${icon('close', 19)}</button>
+            </div>
+            <p class="record-detail-desc">${escapeHTML(t.desc || '')}</p>
+            <div class="record-detail-meta">
+              <span>${escapeHTML(t.category)}</span>
+              <span>${kindText}</span>
+              <span>+${record.xp} XP</span>
+            </div>
+            ${record.quickPhrase ? `<p class="record-note">${escapeHTML(record.quickPhrase)}</p>` : ''}
+            ${record.note ? `<p class="record-note">${escapeHTML(record.note)}</p>` : ''}
+            ${record.photo ? `<img class="record-detail-photo" src="${record.photo}" alt="${escapeHTML(t.name)}的照片">` : ''}
+          </section>
+        </div>`;
+    }
+
     function recordsView() {
       const year = ui.calendarMonth.getFullYear();
       const month = ui.calendarMonth.getMonth();
@@ -4602,7 +4673,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
             ${selectedRecords.map(record => {
               const t = task(record.taskId);
               return `
-                <article class="record">
+                <article class="record" data-action="open-record" data-record-key="${escapeHTML(record.createdAt || '')}" role="button" tabindex="0" aria-label="查看这条记录的详情">
                   <div class="record-date"><strong>${String(parseDateKey(record.date).getDate()).padStart(2, '0')}</strong>${parseDateKey(record.date).getMonth() + 1}月<br>${weekdayName(record.date)}</div>
                   <div>
                     <div class="record-head">
@@ -5309,6 +5380,16 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
       }
       if (action === 'quick-phrase') {
         ui.completion.quickPhrase = actionElement.dataset.phrase;
+        render();
+        return;
+      }
+      if (action === 'open-record') {
+        ui.recordViewKey = actionElement.dataset.recordKey || null;
+        render();
+        return;
+      }
+      if (action === 'close-record') {
+        ui.recordViewKey = null;
         render();
         return;
       }
