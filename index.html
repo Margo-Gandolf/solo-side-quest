@@ -3534,6 +3534,34 @@ details > summary h3,
       font-family: inherit;
     }
 </style>
+<style>
+    .photo-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .photo-thumb {
+      position: relative;
+      display: block;
+      width: 86px;
+      height: 86px;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(90, 50, 35, .18);
+    }
+    .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .photo-remove {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 20px;
+      height: 20px;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      color: #fff;
+      background: rgba(67, 49, 42, .72);
+      font-size: 13px;
+      line-height: 20px;
+      cursor: pointer;
+    }
+</style>
 </head>
 <body>
 <div id="pi" role="presentation">
@@ -4590,7 +4618,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
       mapSeed: String(Date.now()) + Math.random(),
       recordEditingKey: null,
       recordDraft: { quickPhrase: '', note: '' },
-      completion: { taskId: null, quickPhrase: '', note: '', photo: '' },
+      completion: { taskId: null, quickPhrase: '', note: '', photo: '', photos: [] },
       locationTaskId: null,
       clearArmed: false,
       toastTimer: null
@@ -5225,11 +5253,18 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
                 <div class="field">
                   <span class="field-label">照片 <em>可选，仅本机保存</em></span>
                   <label class="upload-box">
-                    <span>${icon('camera', 19)} ${ui.completion.photo ? '换一张照片' : '拍一张或选择照片'}</span>
-                    <span class="faint">最长边 800px</span>
-                    <input type="file" accept="image/*" data-photo-input>
+                    <span>${icon('camera', 19)} ${ui.completion.photos.length ? '再加一张照片' : '拍一张或选择照片'}</span>
+                    <span class="faint">最多 3 张，最长边 800px</span>
+                    <input type="file" accept="image/*" data-photo-input multiple>
                   </label>
-                  ${ui.completion.photo ? `<img class="photo-preview" src="${ui.completion.photo}" alt="待保存的照片预览">` : ''}
+                  ${ui.completion.photos.length ? `
+                    <div class="photo-grid">
+                      ${ui.completion.photos.map((src, index) => `
+                        <span class="photo-thumb">
+                          <img src="${src}" alt="第 ${index + 1} 张照片">
+                          <button class="photo-remove" type="button" data-action="remove-photo" data-index="${index}" aria-label="删除这张照片">×</button>
+                        </span>`).join('')}
+                    </div>` : ''}
                 </div>` : `
                 <div class="notice notice-calm">${icon('shield', 18)}<span>照片记录目前关闭；完成状态仍会保存。</span></div>`}
               <div class="sheet-actions">
@@ -5323,7 +5358,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
             </div>
             ${record.quickPhrase ? `<p class="record-note">${escapeHTML(record.quickPhrase)}</p>` : ''}
             ${record.note ? `<p class="record-note">${escapeHTML(record.note)}</p>` : ''}
-            ${record.photo ? `<img class="record-detail-photo" src="${record.photo}" alt="${escapeHTML(t.name)}的照片">` : ''}
+            ${(record.photos && record.photos.length ? record.photos : (record.photo ? [record.photo] : [])).map((src, i) => `<img class="record-detail-photo" src="${src}" alt="${escapeHTML(t.name)}的照片 ${i + 1}">`).join('')}
             <div class="sheet-actions">
               <button type="button" class="btn btn-secondary btn-wide" data-action="edit-record">${icon('feather', 16)} 编辑记录</button>
             </div>
@@ -5988,7 +6023,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
 
     function openCompletion(taskId) {
       if (!taskId || completedIdsToday().has(taskId)) return;
-      ui.completion = { taskId, quickPhrase: '', note: '', photo: '' };
+      ui.completion = { taskId, quickPhrase: '', note: '', photo: '', photos: [] };
       render();
       const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
       if (!isTouchDevice) {
@@ -5998,7 +6033,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
 
     function closeCompletion() {
       document.activeElement?.blur();
-      ui.completion = { taskId: null, quickPhrase: '', note: '', photo: '' };
+      ui.completion = { taskId: null, quickPhrase: '', note: '', photo: '', photos: [] };
       render();
     }
 
@@ -6017,7 +6052,8 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
         done: true,
         quickPhrase: ui.completion.quickPhrase || '',
         note: ui.completion.note || '',
-        photo: state.settings.photoEnabled ? (ui.completion.photo || '') : '',
+        photo: state.settings.photoEnabled ? (ui.completion.photos[0] || '') : '',
+        photos: state.settings.photoEnabled ? ui.completion.photos.slice(0, 3) : [],
         xp: t.xp,
         createdAt: new Date().toISOString()
       };
@@ -6044,7 +6080,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
       }
       const needsPlace = t.completion.includes('地点类型');
       document.activeElement?.blur();
-      ui.completion = { taskId: null, quickPhrase: '', note: '', photo: '' };
+      ui.completion = { taskId: null, quickPhrase: '', note: '', photo: '', photos: [] };
       ui.locationTaskId = needsPlace ? taskId : null;
       render();
       showToast(photoLost ? '照片未保存，仅保存完成状态。' : `${escapeHTML(t.name)} 已收进今天。+${t.xp} XP`);
@@ -6167,7 +6203,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
       ui.selectedRecordDate = dateKey();
       clearTimeout(ui.rollTimer);
       ui.rollingTaskId = null;
-      ui.completion = { taskId: null, quickPhrase: '', note: '', photo: '' };
+      ui.completion = { taskId: null, quickPhrase: '', note: '', photo: '', photos: [] };
       ui.locationTaskId = null;
       ui.clearArmed = false;
       render();
@@ -6272,6 +6308,15 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
         render();
         return;
       }
+      if (action === 'remove-photo') {
+        const index = Number(actionElement.dataset.index || -1);
+        if (index >= 0) {
+          ui.completion.photos = ui.completion.photos.filter((_, i) => i !== index);
+          ui.completion.photo = ui.completion.photos[0] || '';
+          render();
+        }
+        return;
+      }
       if (action === 'toggle-long-day') {
         if (mainCompletedToday()) {
           showToast('今天的主线已经开过了，长副本明天再试。');
@@ -6346,16 +6391,26 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
         return;
       }
       if (target.matches('[data-photo-input]')) {
-        const file = target.files?.[0];
-        if (!file) return;
-        compressPhoto(file).then(photo => {
-          ui.completion.photo = photo;
-          render();
-          showToast('照片已压缩到本机记录大小。');
-        }).catch(error => {
-          console.error(error);
-          showToast('这张照片暂时无法读取，可以跳过照片继续保存。');
-        });
+        const files = Array.from(target.files || []);
+        if (!files.length) return;
+        const room = 3 - ui.completion.photos.length;
+        if (room <= 0) {
+          showToast('最多 3 张，删掉一张再加吧。');
+          return;
+        }
+        const picked = files.slice(0, room);
+        Promise.all(picked.map(file => compressPhoto(file).catch(() => null)))
+          .then(results => {
+            const good = results.filter(Boolean);
+            if (!good.length) {
+              showToast('这些照片暂时无法读取，可以跳过照片继续保存。');
+              return;
+            }
+            ui.completion.photos = ui.completion.photos.concat(good).slice(0, 3);
+            ui.completion.photo = ui.completion.photos[0] || '';
+            render();
+            showToast('已加入 ' + good.length + ' 张照片。');
+          });
         return;
       }
       if (target.matches('#import-input')) {
