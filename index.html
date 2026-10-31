@@ -5294,7 +5294,11 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
         '任意地标': [19, 17], '公园': [79, 20], '商场': [18, 47], '书店': [82, 48],
         '街角': [25, 73], '便利店': [75, 72], '其他': [52, 88]
       };
+      const keepOut = Object.values(placePos).concat([[50, 50]]);
       const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+      // 地图是 4:5，纵向百分比在像素上更大，比较距离时按比例缩一下
+      const clearOf = (x, y) => keepOut.every(([px, py]) => Math.hypot((x - px) * 0.8, y - py) > 17);
+
       const shuffle = arr => {
         const a = arr.slice();
         for (let i = a.length - 1; i > 0; i--) {
@@ -5310,26 +5314,42 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
       const nextCat = () => catOrder[ci++ % catOrder.length];
       const out = [];
 
-      // 每个地点旁边站一位：左右交替，站得比标签高一点，不压字
+      const tryPlace = (bx, by, spread) => {
+        for (let k = 0; k < 26; k++) {
+          const ang = rand() * Math.PI * 2;
+          const dist = spread + rand() * 7;
+          const x = clamp(bx + Math.cos(ang) * dist, 11, 89);
+          const y = clamp(by + Math.sin(ang) * dist * 0.8, 14, 86);
+          if (clearOf(x, y)) return { x, y };
+        }
+        return null;
+      };
+
+      // 每个地点旁边站一位
       placeOrder.forEach((place, i) => {
         const [bx, by] = placePos[place];
-        const side = i % 2 === 0 ? 1 : -1;
-        const x = clamp(bx + side * (9 + rand() * 5), 10, 90);
-        const y = clamp(by - (7 + rand() * 5), 13, 86);
-        out.push({ cat: nextCat(), x, y, w: 38 + rand() * 14, r: rand() * 10 - 5 });
+        const spot = tryPlace(bx, by, 16 + (i % 3) * 3);
+        if (spot) out.push({ cat: nextCat(), x: spot.x, y: spot.y });
       });
 
-      // 再放四位走在路上
-      for (let i = 0; i < 4; i++) {
+      // 再放三位在路上
+      for (let i = 0; i < 3; i++) {
         const place = placeOrder[i % placeOrder.length];
         const [bx, by] = placePos[place];
-        const t = 0.3 + rand() * 0.34;
-        const x = clamp(50 + (bx - 50) * t + (rand() * 12 - 6), 10, 90);
-        const y = clamp(50 + (by - 50) * t + (rand() * 12 - 6), 13, 86);
-        out.push({ cat: nextCat(), x, y, w: 34 + rand() * 12, r: rand() * 14 - 7 });
+        const t = 0.34 + rand() * 0.28;
+        const spot = tryPlace(50 + (bx - 50) * t, 50 + (by - 50) * t, 10);
+        if (spot) out.push({ cat: nextCat(), x: spot.x, y: spot.y });
       }
 
-      return out;
+      // 有空位就补满，凑够十位
+      let guard = 0;
+      while (out.length < 10 && guard++ < 400) {
+        const x = 11 + rand() * 78;
+        const y = 14 + rand() * 72;
+        if (clearOf(x, y)) out.push({ cat: nextCat(), x, y });
+      }
+
+      return out.map(npc => ({ ...npc, w: 32, r: rand() * 10 - 5 }));
     }
 
     function mapView() {
@@ -5355,7 +5375,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
           </div>
           ${mapNpcPositions(dateKey() + '|map').map(npc => `
             <img class="map-npc" src="${NPC_IMG[npc.cat] || ''}" alt=""
-                 style="--x:${npc.x.toFixed(1)}%;--y:${npc.y.toFixed(1)}%;--w:${npc.w.toFixed(0)}px;--r:${npc.r.toFixed(1)}deg">
+                 style="--x:${npc.x.toFixed(1)}%;--y:${npc.y.toFixed(1)}%;--w:${npc.w}px;--r:${npc.r.toFixed(1)}deg">
           `).join('')}
           ${PLACES.map(place => {
             const count = Number(counts[place] || 0);
@@ -6095,7 +6115,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
   if (!root) return;
 
   var KEY = 'lpIntroPlayed_v1';
-  var LINES = ['点点手指，', '拆几个今天的盲盒'];
+  var LINES = ['点点手指，', '完成村民的任务吧'];
   var DURATION = 4500;
 
   // 同一次会话里已经看过就跳过
