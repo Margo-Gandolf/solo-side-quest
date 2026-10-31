@@ -6329,7 +6329,10 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
         return;
       }
       if (action === 'collection-page') {
-        ui.collectionPage = Math.max(0, (ui.collectionPage || 0) + Number(actionElement.dataset.dir || 0));
+        const nextPage = Math.max(0, (ui.collectionPage || 0) + Number(actionElement.dataset.dir || 0));
+        if (nextPage === ui.collectionPage) return;
+        ui.collectionPage = nextPage;
+        collectionPageRerender = true;
         render();
         return;
       }
@@ -6427,9 +6430,15 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
       }
       const openedCat = el.dataset.category || null;
       ui.collectionOpen = openedCat;
-      // 页码不是第一页时，DOM 里还是旧页的内容，必须重绘一次
+      // 翻页本身会重绘，重绘后 <details open> 会再触发一次 toggle，这次要跳过
+      if (collectionPageRerender) {
+        collectionPageRerender = false;
+        return;
+      }
+      // 打开的是旧页内容，先回到第一页
       if (ui.collectionPage !== 0) {
         ui.collectionPage = 0;
+        collectionPageRerender = true;
         render();
         return;
       }
@@ -6444,6 +6453,8 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
         window.scrollTo({ top: Math.max(0, anchor + window.scrollY - 18), behavior: 'smooth' });
       });
     }, true);
+
+    let collectionPageRerender = false;
 
     // 详情里左右滑动翻页
     (function () {
@@ -6465,7 +6476,10 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
         const dx = t.clientX - startX;
         const dy = t.clientY - startY;
         if (Math.abs(dx) < 46 || Math.abs(dx) < Math.abs(dy)) return;
-        ui.collectionPage = Math.max(0, (ui.collectionPage || 0) + (dx < 0 ? 1 : -1));
+        const nextPage = Math.max(0, (ui.collectionPage || 0) + (dx < 0 ? 1 : -1));
+        if (nextPage === ui.collectionPage) return;
+        ui.collectionPage = nextPage;
+        collectionPageRerender = true;
         render();
       }, { passive: true });
     })();
