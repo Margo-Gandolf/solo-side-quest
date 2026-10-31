@@ -3463,6 +3463,23 @@ details > summary h3,
     }
     .nav-btn { min-height: 66px; }
 </style>
+<style>
+    /* 「换一个」挪到主任务卡右下角 */
+    .simple-task.is-main { position: relative; }
+    .simple-task.is-main .reroll-corner {
+      position: absolute;
+      right: 18px;
+      bottom: 18px;
+      z-index: 2;
+      white-space: nowrap;
+    }
+    /* 给右上角的人物标签留出宽度，标题不会钻到它下面 */
+    .simple-task.is-main .task-body h2 { padding-right: 96px; }
+    @media (max-width: 560px) {
+      .simple-task.is-main .reroll-corner { right: 12px; bottom: 12px; }
+      .simple-task.is-main .simple-task-actions { padding-right: 86px; }
+    }
+</style>
 </head>
 <body>
 <div id="pi" role="presentation">
@@ -4841,7 +4858,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
                   : `<button class="btn btn-primary" data-action="open-complete" data-task-id="${mainTask.id}">${icon('check', 18)} 搞定</button>`}
                 ${mainDone
                   ? ''
-                  : `<button class="tiny-action" data-action="reroll">${icon('refresh', 15)} 换一个</button>
+                  : `<button class="tiny-action reroll-corner" data-action="reroll">${icon('refresh', 15)} 换一个</button>
                      <button class="tiny-action" data-action="skip-main">当前做不了</button>`}
               </div>
             </div>
