@@ -3490,6 +3490,37 @@ details > summary h3,
       .simple-task.is-main .simple-task-actions { padding-right: 86px; }
     }
 </style>
+<style>
+    /* ===== 图鉴详情分页 ===== */
+    .chip-pager {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 10px 0 2px;
+    }
+    .pager-btn {
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      border: 1px solid rgba(91, 55, 39, .18);
+      border-radius: 50%;
+      color: var(--forest);
+      background: rgba(255, 253, 246, .9);
+      cursor: pointer;
+    }
+    .pager-btn:disabled { opacity: .35; cursor: default; }
+    .pager-btn svg { transform: rotate(90deg); }
+    .pager-next svg { transform: rotate(-90deg); }
+    .pager-count {
+      color: var(--ink-faint);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .04em;
+    }
+</style>
 </head>
 <body>
 <div id="pi" role="presentation">
@@ -4390,6 +4421,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
       recordViewKey: null,
       collectionFocus: null,
       collectionOpen: null,
+      collectionPage: 0,
       mapSeed: String(Date.now()) + Math.random(),
       recordEditingKey: null,
       recordDraft: { quickPhrase: '', note: '' },
@@ -5275,8 +5307,20 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
                   </span>
                 </summary>
                 <div class="drawer-content">
+                  ${(() => {
+                    const perPage = 10;
+                    const pageCount = Math.max(1, Math.ceil(tasks.length / perPage));
+                    const page = Math.min(ui.collectionPage || 0, pageCount - 1);
+                    const slice = tasks.slice(page * perPage, page * perPage + perPage);
+                    const pager = pageCount > 1 ? `
+                      <div class="chip-pager">
+                        <button type="button" class="pager-btn" data-action="collection-page" data-dir="-1" ${page === 0 ? 'disabled' : ''} aria-label="上一页">${icon('chevron', 14)}</button>
+                        <span class="pager-count">${page + 1} / ${pageCount}</span>
+                        <button type="button" class="pager-btn pager-next" data-action="collection-page" data-dir="1" ${page >= pageCount - 1 ? 'disabled' : ''} aria-label="下一页">${icon('chevron', 14)}</button>
+                      </div>` : '';
+                    return `
                   <div class="task-chips">
-                    ${tasks.map(t => {
+                    ${slice.map(t => {
                       const isUnlocked = unlocked.has(t.id);
                       return `<div class="task-chip ${isUnlocked ? 'is-unlocked' : ''}">
                         <strong>${isUnlocked ? `<span class="task-zh-title">${escapeHTML(t.name)}</span>` : '未解锁'}</strong>
@@ -5285,6 +5329,8 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
                       </div>`;
                     }).join('')}
                   </div>
+                  ${pager}`;
+                  })()}
                 </div>
               </details>`;
           }).join('')}
@@ -6033,6 +6079,11 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
         render();
         return;
       }
+      if (action === 'collection-page') {
+        ui.collectionPage = Math.max(0, (ui.collectionPage || 0) + Number(actionElement.dataset.dir || 0));
+        render();
+        return;
+      }
       if (action === 'open-record') {
         ui.recordViewKey = actionElement.dataset.recordKey || null;
         ui.recordEditingKey = null;
@@ -6115,6 +6166,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
         if (ui.collectionOpen === el.dataset.category) ui.collectionOpen = null;
         return;
       }
+      if (ui.collectionOpen !== (el.dataset.category || null)) ui.collectionPage = 0;
       ui.collectionOpen = el.dataset.category || null;
       // 同时只留一张展开
       document.querySelectorAll('.npc-card').forEach(other => {
@@ -6126,6 +6178,31 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
         window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
       });
     }, true);
+
+    // 详情里左右滑动翻页
+    (function () {
+      let startX = 0;
+      let startY = 0;
+      let tracking = false;
+      document.addEventListener('touchstart', event => {
+        if (!ui.collectionOpen) return;
+        if (!event.target.closest('.drawer-content')) return;
+        const t = event.touches[0];
+        startX = t.clientX;
+        startY = t.clientY;
+        tracking = true;
+      }, { passive: true });
+      document.addEventListener('touchend', event => {
+        if (!tracking) return;
+        tracking = false;
+        const t = event.changedTouches[0];
+        const dx = t.clientX - startX;
+        const dy = t.clientY - startY;
+        if (Math.abs(dx) < 46 || Math.abs(dx) < Math.abs(dy)) return;
+        ui.collectionPage = Math.max(0, (ui.collectionPage || 0) + (dx < 0 ? 1 : -1));
+        render();
+      }, { passive: true });
+    })();
 
     // 点空白处收起已展开的卡片
     document.addEventListener('click', event => {
