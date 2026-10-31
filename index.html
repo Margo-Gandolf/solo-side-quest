@@ -3209,36 +3209,70 @@ details > summary h3,
 </style>
 <style>
     /* ===== 今日页：村民站到任务卡上 ===== */
+    .simple-task:focus,
+    .simple-task:focus-visible { outline: none; }
     .simple-task { overflow: visible; }
-    .npc-on-card {
+    .npc-badge {
       position: absolute;
-      right: 14px;
+      right: 16px;
       top: -56px;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      pointer-events: none;
+    }
+    .npc-badge .npc-on-card {
+      position: static;
       height: 108px;
       width: auto;
-      z-index: 4;
-      pointer-events: none;
       filter: drop-shadow(0 6px 10px rgba(90, 50, 35, .30));
     }
-    .simple-task.is-main {
-      margin-top: 74px;
+    .npc-tag {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 4px;
+      padding: 2px 9px;
+      border-radius: 999px;
+      background: rgba(255, 253, 246, .94);
+      color: var(--ink);
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1.5;
+      white-space: nowrap;
+      box-shadow: 0 1px 3px rgba(90, 50, 35, .18);
     }
-    .simple-task.is-main .npc-on-card {
-      height: 132px;
+    .npc-tag em {
+      font-style: normal;
+      font-weight: 500;
+      color: var(--ink-faint);
+    }
+    .simple-task.is-main {
+      margin-top: 88px;
+    }
+    .simple-task.is-main .npc-badge {
       top: -74px;
       right: 22px;
+    }
+    .simple-task.is-main .npc-badge .npc-on-card {
+      height: 132px;
     }
     .simple-task.is-main .simple-task-head {
       padding-right: 104px;
     }
     .micro-task-grid {
-      margin-top: 60px;
+      margin-top: 74px;
     }
-    .micro-task .npc-on-card {
-      height: 94px;
+    .micro-task .npc-badge {
       top: -50px;
-      right: 28px;
+      right: 20px;
     }
+    .micro-task .npc-badge .npc-on-card {
+      height: 94px;
+    }
+    .micro-task .npc-tag em { display: none; }
+    .micro-task .npc-tag { font-size: 9.5px; padding: 1px 7px; }
     .micro-task .simple-task-head {
       padding-right: 70px;
     }
@@ -4787,7 +4821,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
         ${gapMessage}
         ${ui.revealedTaskIds.has(mainTask.id) ? `
           <article class="simple-task is-main ${mainDone ? 'is-done' : ''}" id="task-card-${mainTask.id}" tabindex="-1" aria-labelledby="main-task-title">
-            <img class="npc-on-card" src="${NPC_IMG[mainTask.category] || ''}" alt="">
+            <span class="npc-badge"><img class="npc-on-card" src="${NPC_IMG[mainTask.category] || ''}" alt=""><span class="npc-tag">${(NPC_INFO[mainTask.category] || {}).name || ''}<em>${(NPC_INFO[mainTask.category] || {}).role || ''}</em></span></span>
             <div class="task-body revealed-content">
               <div class="simple-task-head">
                 <span class="task-type-label">主线任务 · ${mainTask.category}</span>
@@ -4831,7 +4865,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
             return `
               ${ui.revealedTaskIds.has(t.id) ? `
                 <article class="simple-task micro-task ${isDone ? 'is-done' : ''}" id="task-card-${t.id}" tabindex="-1">
-                  <img class="npc-on-card" src="${NPC_IMG[t.category] || ''}" alt="">
+                  <span class="npc-badge"><img class="npc-on-card" src="${NPC_IMG[t.category] || ''}" alt=""><span class="npc-tag">${(NPC_INFO[t.category] || {}).name || ''}<em>${(NPC_INFO[t.category] || {}).role || ''}</em></span></span>
                   <div class="task-body revealed-content">
                     <div class="simple-task-head">
                       <span>小任务 0${index + 1}</span>
@@ -4871,6 +4905,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
               return `
                 ${ui.revealedTaskIds.has(t.id) ? `
                   <article class="simple-task micro-task extra-task ${isDone ? 'is-done' : ''}" id="task-card-${t.id}" tabindex="-1">
+                    <span class="npc-badge"><img class="npc-on-card" src="${NPC_IMG[t.category] || ''}" alt=""><span class="npc-tag">${(NPC_INFO[t.category] || {}).name || ''}<em>${(NPC_INFO[t.category] || {}).role || ''}</em></span></span>
                     <div class="task-body revealed-content">
                       <div class="simple-task-head">
                         <span>多走两步 ${String(index + 1).padStart(2, '0')}</span>
