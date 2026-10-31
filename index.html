@@ -3191,12 +3191,14 @@ details > summary h3,
       pointer-events: none;
       filter: drop-shadow(0 6px 9px rgba(108, 78, 52, .22));
     }
-    /* 窄屏改成单列，村民不挤文字 */
+    /* 窄屏：仍然两列，人物和文字都缩一档 */
     @media (max-width: 560px) {
-      .sb-board .drawer-card { flex: 1 1 100%; }
-      .sb-board .npc-card > summary { padding-right: 86px; }
-      .npc-figure { height: 96px; top: -54px; }
-      .drawer-grid.sb-board { row-gap: 62px; padding-top: 70px; }
+      .sb-board .npc-card > summary { padding: 12px 68px 11px 12px; }
+      .sb-board .npc-card h3 { font-size: 17px; }
+      .sb-board .npc-role { font-size: 10px; }
+      .sb-board .npc-figure,
+      .sb-board .npc-card .npc-figure { height: 76px; top: -44px; right: 2px; }
+      .drawer-grid.sb-board { row-gap: 54px; padding-top: 62px; }
     }
     .sb-board .npc-role {
       display: block;
@@ -4793,8 +4795,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
         ${noNav ? '' : bottomNav()}
         ${renderCompletionSheet()}
         ${renderLocationSheet()}
-        ${renderRecordSheet()}
-        ${renderCollectionFocus()}`;
+        ${renderRecordSheet()}`;
     }
 
     function todayView() {
@@ -5092,37 +5093,6 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
       showToast('记录已更新。');
     }
 
-    function renderCollectionFocus() {
-      const category = ui.collectionFocus;
-      if (!category) return '';
-      const unlocked = new Set(state.collection.unlockedTaskIds || []);
-      const tasks = MAIN_TASKS.filter(t => t.category === category);
-      const info = NPC_INFO[category] || { name: category, role: '' };
-      return `
-        <div class="overlay collection-focus-overlay" data-action="close-collection-focus">
-          <section class="collection-focus-panel" role="dialog" aria-modal="true" data-stop-close>
-            <div class="focus-head">
-              <div>
-                <p class="eyebrow">${escapeHTML(category)} · ${tasks.length} 个任务</p>
-                <h2>${escapeHTML(info.name)}</h2>
-                <p class="focus-role">${escapeHTML(info.role)}</p>
-              </div>
-              <button class="icon-btn" type="button" data-action="close-collection-focus" aria-label="关闭">${icon('close', 19)}</button>
-            </div>
-            <div class="task-chips focus-chips">
-              ${tasks.map(t => {
-                const isUnlocked = unlocked.has(t.id);
-                return `<div class="task-chip ${isUnlocked ? 'is-unlocked' : ''}">
-                  <strong>${isUnlocked ? `<span class="task-zh-title">${escapeHTML(t.name)}</span>` : '还未点亮'}</strong>
-                  ${isUnlocked ? `<span class="task-en-mini">${escapeHTML(t.enName)}</span>` : ''}
-                  <span>${isUnlocked ? `${escapeHTML(state.collection.unlockDates?.[t.id] || '')} 点亮` : `${t.id} · ${t.minutes} 分钟`}</span>
-                </div>`;
-              }).join('')}
-            </div>
-          </section>
-        </div>`;
-    }
-
     function recordsView() {
       const year = ui.calendarMonth.getFullYear();
       const month = ui.calendarMonth.getMonth();
@@ -5276,7 +5246,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
                     </span>
                   </span>
                 </summary>
-                <div class="drawer-content" data-action="focus-category" data-category="${escapeHTML(category)}">
+                <div class="drawer-content">
                   <div class="task-chips">
                     ${tasks.map(t => {
                       const isUnlocked = unlocked.has(t.id);
@@ -6019,16 +5989,6 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
       }
       if (action === 'record-phrase') {
         ui.recordDraft.quickPhrase = actionElement.dataset.phrase;
-        render();
-        return;
-      }
-      if (action === 'focus-category') {
-        ui.collectionFocus = actionElement.dataset.category || null;
-        render();
-        return;
-      }
-      if (action === 'close-collection-focus') {
-        ui.collectionFocus = null;
         render();
         return;
       }
