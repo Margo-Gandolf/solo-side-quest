@@ -3198,6 +3198,8 @@ details > summary h3,
       .sb-board .npc-role { font-size: 10px; }
       .sb-board .npc-figure,
       .sb-board .npc-card .npc-figure { height: 76px; top: -44px; right: 2px; }
+      .sb-board .npc-card[open] { margin-top: 148px; }
+      .sb-board .npc-card[open] .npc-figure { height: 168px; top: -144px; right: 6px; }
       .drawer-grid.sb-board { row-gap: 54px; padding-top: 62px; }
     }
     .sb-board .npc-role {
@@ -3420,7 +3422,15 @@ details > summary h3,
     /* 展开的村民卡：同时横向撑满 */
     .sb-board .npc-card[open] {
       flex: 1 1 100%;
+      margin-top: 208px;
     }
+    /* 展开时人像放大（约 2.3 倍） */
+    .sb-board .npc-card[open] .npc-figure {
+      height: 240px;
+      top: -204px;
+      right: 12px;
+    }
+    .sb-board .npc-card[open] .npc-tag { display: none; }
     .sb-board .npc-card[open] .task-chips {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
