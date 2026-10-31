@@ -3435,8 +3435,8 @@ details > summary h3,
       z-index: 4;
       left: var(--x);
       top: var(--y);
-      width: var(--w, 44px);
-      height: auto;
+      height: 48px;
+      width: auto;
       transform: translate(-50%, -100%) rotate(var(--r, 0deg));
       transform-origin: 50% 100%;
       pointer-events: none;
@@ -4363,6 +4363,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
       recordViewKey: null,
       collectionFocus: null,
       collectionOpen: null,
+      mapSeed: String(Date.now()) + Math.random(),
       recordEditingKey: null,
       recordDraft: { quickPhrase: '', note: '' },
       completion: { taskId: null, quickPhrase: '', note: '', photo: '' },
@@ -5303,10 +5304,10 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
       const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
       // 离地点和「家」都要远：横向按 0.78、纵向按 1.12 折算，纵向更严格，避免压到标签
-      const awayFromPins = (x, y) => pins.every(([px, py]) => Math.hypot((x - px) * 0.78, (y - py) * 1.12) > 19);
+      const awayFromPins = (x, y) => pins.every(([px, py]) => Math.hypot((x - px) * 0.76, (y - py) * 1.1) > 17.5);
 
       const placed = [];
-      const awayFromOthers = (x, y) => placed.every(p => Math.hypot((x - p.x) * 0.85, y - p.y) > 11);
+      const awayFromOthers = (x, y) => placed.every(p => Math.hypot((x - p.x) * 0.85, y - p.y) > 9);
 
       const shuffle = arr => {
         const a = arr.slice();
@@ -5350,13 +5351,13 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
 
       // 补到九位，仍然要求彼此不挨着
       let guard = 0;
-      while (placed.length < 9 && guard++ < 600) {
+      while (placed.length < 13 && guard++ < 900) {
         const x = 12 + rand() * 76;
         const y = 15 + rand() * 70;
         if (awayFromPins(x, y) && awayFromOthers(x, y)) placed.push({ x, y });
       }
 
-      return placed.map(p => ({ ...p, cat: nextCat(), w: 32, r: rand() * 10 - 5 }));
+      return placed.map(p => ({ ...p, cat: nextCat(), r: rand() * 8 - 4 }));
     }
 
     function mapView() {
@@ -5380,9 +5381,9 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
             <span class="map-home__icon">${icon('home', 27)}</span>
             <span class="map-home__label"><span class="bi-zh">家</span><span class="bi-en">Home</span></span>
           </div>
-          ${mapNpcPositions(dateKey() + '|map').map(npc => `
+          ${mapNpcPositions(ui.mapSeed).map(npc => `
             <img class="map-npc" src="${NPC_IMG[npc.cat] || ''}" alt=""
-                 style="--x:${npc.x.toFixed(1)}%;--y:${npc.y.toFixed(1)}%;--w:${npc.w}px;--r:${npc.r.toFixed(1)}deg">
+                 style="--x:${npc.x.toFixed(1)}%;--y:${npc.y.toFixed(1)}%;--r:${npc.r.toFixed(1)}deg">
           `).join('')}
           ${PLACES.map(place => {
             const count = Number(counts[place] || 0);
