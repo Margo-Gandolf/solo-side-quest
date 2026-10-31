@@ -562,7 +562,7 @@
     }
     .simple-task-actions .tiny-action:disabled { opacity: .45; }
     .micro-task-head {
-      margin: 22px 0 10px;
+      margin: 26px 0 4px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -571,7 +571,7 @@
     .micro-task-head h2 {
       margin-bottom: 0;
       font-family: "LXGW WenKai", "霞鹜文楷", "楷体", serif;
-      font-size: 21px;
+      font-size: 28px;
       font-weight: 700;
       letter-spacing: .01em;
     }
@@ -2599,7 +2599,6 @@
     .simple-task-actions .tiny-action { font-size: 13px; }
     .btn { font-size: 15px; }
     .btn-small { font-size: 13px; }
-    .micro-task-head h2 { font-size: 21px; font-family: "LXGW WenKai", "霞鹜文楷", "楷体", serif; letter-spacing: .01em; }
     .micro-task-head span { font-size: 12px; }
     .micro-task .task-en-title { font-size: 12px; }
     .micro-task .task-body > p { font-size: 14px; }
@@ -3258,8 +3257,8 @@ details > summary h3,
       font-weight: 500;
       color: var(--ink-faint);
     }
-    .simple-task.is-main {
-      margin-top: 88px;
+    .simple-task.is-main.has-npc {
+      margin-top: 82px;
     }
     .simple-task.is-main .npc-badge {
       top: -74px;
@@ -3272,7 +3271,10 @@ details > summary h3,
       padding-right: 104px;
     }
     .micro-task-grid {
-      margin-top: 74px;
+      margin-top: 10px;
+    }
+    .micro-task.has-npc {
+      margin-top: 66px;
     }
     .micro-task .npc-badge {
       top: -50px;
@@ -5197,7 +5199,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
           </button>
         </section>
         ${ui.revealedTaskIds.has(mainTask.id) ? `
-          <article class="simple-task is-main ${mainDone ? 'is-done' : ''}" id="task-card-${mainTask.id}" tabindex="-1" aria-labelledby="main-task-title">
+          <article class="simple-task is-main has-npc ${mainDone ? 'is-done' : ''}" id="task-card-${mainTask.id}" tabindex="-1" aria-labelledby="main-task-title">
             <span class="npc-badge"><img class="npc-on-card" src="${NPC_IMG[mainTask.category] || ''}" alt=""><span class="npc-tag">${(NPC_INFO[mainTask.category] || {}).name || ''}<em>${(NPC_INFO[mainTask.category] || {}).role || ''}</em></span></span>
             <div class="task-body revealed-content">
               <div class="simple-task-head">
@@ -5240,7 +5242,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
             const isDone = done.has(id);
             return `
               ${ui.revealedTaskIds.has(t.id) ? `
-                <article class="simple-task micro-task ${isDone ? 'is-done' : ''}" id="task-card-${t.id}" tabindex="-1">
+                <article class="simple-task micro-task has-npc ${isDone ? 'is-done' : ''}" id="task-card-${t.id}" tabindex="-1">
                   <span class="npc-badge"><img class="npc-on-card" src="${NPC_IMG[t.category] || ''}" alt=""><span class="npc-tag">${(NPC_INFO[t.category] || {}).name || ''}<em>${(NPC_INFO[t.category] || {}).role || ''}</em></span></span>
                   <div class="task-body revealed-content">
                     <div class="simple-task-head">
@@ -5279,7 +5281,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
               const isDone = done.has(id);
               return `
                 ${ui.revealedTaskIds.has(t.id) ? `
-                  <article class="simple-task micro-task extra-task ${isDone ? 'is-done' : ''}" id="task-card-${t.id}" tabindex="-1">
+                  <article class="simple-task micro-task extra-task has-npc ${isDone ? 'is-done': ''}" id="task-card-${t.id}" tabindex="-1">
                     <span class="npc-badge"><img class="npc-on-card" src="${NPC_IMG[t.category] || ''}" alt=""><span class="npc-tag">${(NPC_INFO[t.category] || {}).name || ''}<em>${(NPC_INFO[t.category] || {}).role || ''}</em></span></span>
                     <div class="task-body revealed-content">
                       <div class="simple-task-head">
