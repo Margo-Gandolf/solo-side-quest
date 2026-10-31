@@ -5311,6 +5311,13 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
         ? '多走两步'
         : (record.kind === 'anchor' || record.taskId.startsWith('M')) ? '路边偶遇' : '主线任务';
       const editing = ui.recordEditingKey === record.createdAt;
+      // 和列表里一致的便签配色（按当天记录的倒序位置轮换）
+      const NOTE_COLORS = ['#fdf2c9', '#fbdfe3', '#dcecf7', '#e4f1d8'];
+      const sameDay = state.records
+        .filter(r => r.date === record.date && r.done)
+        .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+      const noteIndex = Math.max(0, sameDay.findIndex(r => r.createdAt === record.createdAt));
+      const noteBg = NOTE_COLORS[noteIndex % NOTE_COLORS.length];
       const head = `
             <div class="sheet-head">
               <div>
@@ -5324,7 +5331,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
       if (editing) {
         return `
         <div class="overlay" data-action="close-record">
-          <section class="sheet record-sheet" role="dialog" aria-modal="true" aria-labelledby="record-title" data-stop-close>
+          <section class="sheet record-sheet" role="dialog" aria-modal="true" aria-labelledby="record-title" data-stop-close style="background-color:${noteBg}">
             ${head}
             <form data-form="record-edit" data-key="${escapeHTML(record.createdAt)}">
               <div class="field">
@@ -5348,7 +5355,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
 
       return `
         <div class="overlay" data-action="close-record">
-          <section class="sheet record-sheet" role="dialog" aria-modal="true" aria-labelledby="record-title" data-stop-close>
+          <section class="sheet record-sheet" role="dialog" aria-modal="true" aria-labelledby="record-title" data-stop-close style="background-color:${noteBg}">
             ${head}
             <p class="record-detail-desc">${escapeHTML(t.desc || '')}</p>
             <div class="record-detail-meta">
