@@ -6111,15 +6111,31 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
     document.addEventListener('toggle', event => {
       const el = event.target;
       if (!el || !el.matches || !el.matches('.npc-card')) return;
-      ui.collectionOpen = el.open ? (el.dataset.category || null) : null;
-      if (el.open) {
-        // 展开后把它带进视野，避免内容是空的错觉
-        requestAnimationFrame(() => {
-          const top = el.getBoundingClientRect().top + window.scrollY - 92;
-          window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
-        });
+      if (!el.open) {
+        if (ui.collectionOpen === el.dataset.category) ui.collectionOpen = null;
+        return;
       }
+      ui.collectionOpen = el.dataset.category || null;
+      // 同时只留一张展开
+      document.querySelectorAll('.npc-card').forEach(other => {
+        if (other !== el) other.open = false;
+      });
+      // 展开后把它带进视野，避免内容是空的错觉
+      requestAnimationFrame(() => {
+        const top = el.getBoundingClientRect().top + window.scrollY - 92;
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      });
     }, true);
+
+    // 点空白处收起已展开的卡片
+    document.addEventListener('click', event => {
+      if (!ui.collectionOpen) return;
+      const t = event.target;
+      if (!(t instanceof Element)) return;
+      if (t.closest('.npc-card, .bottom-nav, .overlay, button, a, input, textarea, select')) return;
+      const el = Array.from(document.querySelectorAll('.npc-card')).find(c => c.dataset.category === ui.collectionOpen);
+      if (el) el.open = false;
+    }, false);
 
     document.addEventListener('input', event => {
       if (event.target.matches('[data-completion-note]')) {
