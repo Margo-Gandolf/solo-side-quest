@@ -3567,7 +3567,7 @@ details > summary h3,
       '多走两步': 'A few more steps',
       '看心情吧': 'Whichever you feel like.',
       '迎面撞上了……': 'And then you bumped into...',
-      '哎呀，你也在~': 'Oh, you are here too~',
+      '真巧，你也在': 'What a coincidence, you are here too',
       '正在随机翻牌': 'Shuffling a task...',
       '从任务池里抽一张': 'Picking one from the task pool',
       '已完成': 'Completed',
@@ -4886,7 +4886,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
                   <button class="task-cover" data-action="reveal-task" data-task-id="${t.id}" aria-label="揭晓小任务 ${index + 1}">
                     <span class="task-cover-copy">
                       <span class="task-cover-kicker">小任务 0${index + 1}${isDone ? ' · 已完成' : ''}</span>
-                      <span class="task-cover-title">${ui.rollingTaskId === t.id ? '正在随机翻牌' : '哎呀，你也在~'}</span>
+                      <span class="task-cover-title">${ui.rollingTaskId === t.id ? '正在随机翻牌' : '真巧，你也在'}</span>
                       ${ui.rollingTaskId === t.id ? '<span class="task-cover-note">从任务池里抽一张<span class="roll-dots" aria-hidden="true"><i></i><i></i><i></i></span></span>' : ''}
                     </span>
                     <span class="task-cover-mark">${icon(ui.rollingTaskId === t.id ? 'refresh' : 'spark', 20)}</span>
@@ -4926,7 +4926,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
                     <button class="task-cover" data-action="reveal-task" data-task-id="${t.id}" aria-label="揭晓多走两步 ${index + 1}">
                       <span class="task-cover-copy">
                         <span class="task-cover-kicker">多走两步 ${String(index + 1).padStart(2, '0')}${isDone ? ' · 已完成' : ''}</span>
-                        <span class="task-cover-title">${ui.rollingTaskId === t.id ? '正在随机翻牌' : '哎呀，你也在~'}</span>
+                        <span class="task-cover-title">${ui.rollingTaskId === t.id ? '正在随机翻牌' : '真巧，你也在'}</span>
                         ${ui.rollingTaskId === t.id ? '<span class="task-cover-note">从任务池里抽一张<span class="roll-dots" aria-hidden="true"><i></i><i></i><i></i></span></span>' : ''}
                       </span>
                       <span class="task-cover-mark">${icon(ui.rollingTaskId === t.id ? 'refresh' : 'spark', 20)}</span>
