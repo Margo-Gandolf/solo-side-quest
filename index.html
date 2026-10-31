@@ -5618,8 +5618,9 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
             ? Array.from(document.querySelectorAll('.npc-card')).find(el => el.dataset.category === ui.collectionOpen)
             : null;
           if (opened) {
-            const top = opened.getBoundingClientRect().top + window.scrollY - 92;
-            window.scrollTo({ top: Math.max(0, top), behavior: 'instant' });
+            const fig = opened.querySelector('.npc-figure');
+            const anchor = fig ? fig.getBoundingClientRect().top : opened.getBoundingClientRect().top;
+            window.scrollTo({ top: Math.max(0, anchor + window.scrollY - 18), behavior: 'instant' });
           }
           return;
         }
@@ -6174,8 +6175,9 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
       });
       // 展开后把它带进视野，避免内容是空的错觉
       requestAnimationFrame(() => {
-        const top = el.getBoundingClientRect().top + window.scrollY - 92;
-        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+        const fig = el.querySelector('.npc-figure');
+        const anchor = fig ? fig.getBoundingClientRect().top : el.getBoundingClientRect().top;
+        window.scrollTo({ top: Math.max(0, anchor + window.scrollY - 18), behavior: 'smooth' });
       });
     }, true);
 
