@@ -3223,7 +3223,7 @@ details > summary h3,
       z-index: 5;
       display: flex;
       flex-direction: column;
-      align-items: center;
+      align-items: flex-end;
       gap: 3px;
       pointer-events: none;
     }
@@ -3519,6 +3519,12 @@ details > summary h3,
       font-size: 11px;
       font-weight: 700;
       letter-spacing: .04em;
+    }
+</style>
+<style>
+    @media (max-width: 560px) {
+      .simple-task.is-main .npc-badge { right: 10px; }
+      .micro-task .npc-badge { right: 6px; }
     }
 </style>
 </head>
