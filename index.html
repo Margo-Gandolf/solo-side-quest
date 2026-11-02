@@ -4720,6 +4720,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
       collectionPage: 0,
       customOpen: false,
       customDraft: { title: '', note: '', due: '' },
+      customEditingId: '',
       mapSeed: String(Date.now()) + Math.random(),
       recordEditingKey: null,
       recordDraft: { quickPhrase: '', note: '' },
@@ -5209,7 +5210,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
         <section class="custom-block">
           ${customTasksToday().length ? `
             <div class="custom-list">
-              ${customTasksToday().map(item => {
+              ${customTasksToday().map((item, index) => {
                 const due = item.dueAt ? new Date(item.dueAt) : null;
                 const left = due ? due.getTime() - Date.now() : 0;
                 const overdue = due && !item.done && left < 0;
@@ -5217,9 +5218,9 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
                   (overdue ? `已过 ${formatGap(-left)}` : `还有 ${formatGap(left)}`);
                 return `
                   <article class="custom-task ${item.done ? 'is-done' : ''} ${overdue ? 'is-overdue' : ''}">
-                    <img class="custom-figure" src="${GIRL_ART}" alt="">
+                    ${index === 0 ? `<img class="custom-figure" src="${GIRL_ART}" alt="">` : ''}
                     <button class="custom-check" type="button" data-action="toggle-custom" data-id="${item.id}" aria-label="标记完成">${item.done ? icon('check', 16) : ''}</button>
-                    <div class="custom-body">
+                    <div class="custom-body" data-action="edit-custom" data-id="${item.id}" role="button" tabindex="0" style="cursor:pointer;">
                       <strong class="user-text">${escapeHTML(item.title)}</strong>
                       ${item.note ? `<span class="user-text">${escapeHTML(item.note)}</span>` : ''}
                       ${label ? `<span class="custom-due">${label}</span>` : ''}
@@ -5438,7 +5439,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
             <div class="sheet-head">
               <div>
                 <p class="eyebrow">自己派的任务</p>
-                <h2 id="custom-title">今天想让自己做什么？</h2>
+                <h2 id="custom-title">${ui.customEditingId ? '改一下这件事' : '今天想让自己做什么？'}</h2>
               </div>
               <button class="icon-btn" type="button" data-action="close-custom" aria-label="关闭">${icon('close', 19)}</button>
             </div>
@@ -5500,22 +5501,31 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
       if (!title) return;
       const note = String(fd.get('note') || '').trim();
       const due = String(fd.get('due') || '');
-      const task = {
-        id: 'C' + Date.now().toString(36),
-        date: dateKey(),
+      const patch = {
         title: title.slice(0, 40),
         note: note.slice(0, 200),
         dueAt: due ? new Date(due).toISOString() : '',
-        done: false,
-        notified: false,
-        createdAt: new Date().toISOString()
+        notified: false
       };
-      state.customTasks = (state.customTasks || []).concat(task);
+      if (ui.customEditingId) {
+        state.customTasks = (state.customTasks || []).map((item) =>
+          item.id === ui.customEditingId ? { ...item, ...patch } : item);
+      } else {
+        state.customTasks = (state.customTasks || []).concat({
+          id: 'C' + Date.now().toString(36),
+          date: dateKey(),
+          ...patch,
+          done: false,
+          createdAt: new Date().toISOString()
+        });
+      }
+      const wasEditing = !!ui.customEditingId;
       ui.customOpen = false;
       ui.customDraft = { title: '', note: '', due: '' };
+      ui.customEditingId = '';
       saveSafely(true);
       render();
-      showToast('记下了。');
+      showToast(wasEditing ? '改好了。' : '记下了。');
     }
 
     function renderRecordSheet() {
@@ -6566,12 +6576,28 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
       }
       if (action === 'open-custom') {
         ui.customDraft = { title: '', note: '', due: '' };
+        ui.customEditingId = '';
+        ui.customOpen = true;
+        render();
+        return;
+      }
+      if (action === 'edit-custom') {
+        const target_ = (state.customTasks || []).find((item) => item.id === actionElement.dataset.id);
+        if (!target_) return;
+        const due = target_.dueAt ? new Date(target_.dueAt) : null;
+        ui.customDraft = {
+          title: target_.title,
+          note: target_.note || '',
+          due: due ? (due.getFullYear() + '-' + String(due.getMonth() + 1).padStart(2, '0') + '-' + String(due.getDate()).padStart(2, '0') + 'T' + String(due.getHours()).padStart(2, '0') + ':' + String(due.getMinutes()).padStart(2, '0')) : ''
+        };
+        ui.customEditingId = target_.id;
         ui.customOpen = true;
         render();
         return;
       }
       if (action === 'close-custom') {
         ui.customOpen = false;
+        ui.customEditingId = '';
         render();
         return;
       }
