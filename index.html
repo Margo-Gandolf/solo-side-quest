@@ -6756,7 +6756,8 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
           </summary>
           <div class="settings-advanced-content">
             <div class="data-actions">
-              <button class="btn btn-secondary" data-action="export">${icon('download', 17)} 导出 JSON</button>
+              <button class="btn btn-secondary" data-action="shrink-photos">${icon('refresh', 17)} 压缩已有照片</button>
+          <button class="btn btn-secondary" data-action="export">${icon('download', 17)} 导出 JSON</button>
               <button class="btn btn-secondary" data-action="import">${icon('upload', 17)} 导入 JSON</button>
               <input class="sr-only" id="import-input" type="file" accept="application/json,.json">
               <button class="btn btn-danger" data-action="clear-data">${icon('trash', 17)} ${ui.clearArmed ? '再点一次清空数据' : '清空本机数据'}</button>
@@ -6835,6 +6836,55 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
       }
     }
 
+    // 照片压缩参数：长边 640px、JPEG 质量 0.65（对比旧版 800/0.60 约省 19%）
+    const PHOTO_MAX = 640;
+    const PHOTO_QUALITY = 0.65;
+
+    function shrinkDataUrl(src, maxSide, quality) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onerror = () => resolve(src);
+        img.onload = () => {
+          const big = Math.max(img.naturalWidth, img.naturalHeight) || 1;
+          if (big <= maxSide) { resolve(src); return; }
+          const scale = maxSide / big;
+          const w = Math.max(1, Math.round(img.naturalWidth * scale));
+          const ht = Math.max(1, Math.round(img.naturalHeight * scale));
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = ht;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(0, 0, w, ht);
+          ctx.drawImage(img, 0, 0, w, ht);
+          const out = canvas.toDataURL('image/jpeg', quality);
+          resolve(out.length < src.length ? out : src);
+        };
+        img.src = src;
+      });
+    }
+
+    async function recompressAllPhotos() {
+      let photos = 0;
+      let before = 0;
+      let after = 0;
+      for (const record of state.records) {
+        if (!Array.isArray(record.photos) || !record.photos.length) continue;
+        const next = [];
+        for (const src of record.photos) {
+          before += src.length;
+          const out = await shrinkDataUrl(src, PHOTO_MAX, PHOTO_QUALITY);
+          after += out.length;
+          next.push(out);
+          if (out !== src) photos += 1;
+        }
+        record.photos = next;
+      }
+      if (ui.photoWorking) ui.photoWorking = false;
+      saveSafely(true);
+      return { photos, before, after };
+    }
+
     function compressPhoto(file) {
       return new Promise((resolve, reject) => {
         if (!file || !file.type.startsWith('image/')) {
@@ -6847,7 +6897,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
           const image = new Image();
           image.onerror = () => reject(new Error('照片格式暂时无法读取'));
           image.onload = () => {
-            const scale = Math.min(1, 800 / Math.max(image.naturalWidth, image.naturalHeight));
+            const scale = Math.min(1, PHOTO_MAX / Math.max(image.naturalWidth, image.naturalHeight));
             const width = Math.max(1, Math.round(image.naturalWidth * scale));
             const height = Math.max(1, Math.round(image.naturalHeight * scale));
             const canvas = document.createElement('canvas');
@@ -6857,7 +6907,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
             context.fillStyle = '#fff';
             context.fillRect(0, 0, width, height);
             context.drawImage(image, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', 0.6));
+            resolve(canvas.toDataURL('image/jpeg', PHOTO_QUALITY));
           };
           image.src = String(reader.result);
         };
@@ -7416,6 +7466,20 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
         ui.locationTaskId = null;
         render();
         showToast('这次只留下完成记录。');
+        return;
+      }
+      if (action === 'shrink-photos') {
+        if (!confirm('把已有照片重新压到 640px，画质略降但导出文件会小很多。继续吗？')) return;
+        showToast('正在压缩照片…');
+        recompressAllPhotos().then((res) => {
+          render();
+          if (!res.photos) { showToast('照片都已经很小了，不用压。'); return; }
+          const saved = Math.round((res.before - res.after) / 1024);
+          showToast(`压好了 ${res.photos} 张，省下约 ${saved} KB。`);
+        }).catch((error) => {
+          console.error(error);
+          showToast('压缩时遇到一点问题。');
+        });
         return;
       }
       if (action === 'export') {
