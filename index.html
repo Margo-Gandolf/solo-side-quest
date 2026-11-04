@@ -563,20 +563,8 @@
       cursor: pointer;
     }
     .simple-task-actions .tiny-action:disabled { opacity: .45; }
-    .micro-task-head {
-      margin: 26px 0 4px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-    .micro-task-head h2 {
-      margin-bottom: 0;
-      font-family: "LXGW WenKai", "霞鹜文楷", "楷体", serif;
-      font-size: 28px;
-      font-weight: 700;
-      letter-spacing: .01em;
-    }
+    .micro-task-head { margin: 30px 0 6px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .micro-task-head h2 { margin-bottom: 0; font-family: "LXGW WenKai", "霞鹜文楷", "楷体", serif; font-size: 36px; font-weight: 700; letter-spacing: .01em; line-height: 1.1; }
     .micro-task-head span { color: var(--ink-faint); font-size: 10px; }
     .micro-task-grid {
       display: grid;
@@ -4240,6 +4228,21 @@ details > summary h3,
     }
     .micro-task .task-cover-copy { align-items: flex-start; }
     .npc-badge { pointer-events: none; }
+</style>
+
+<style>
+    /* 分区标题里的文字是 span（双语层包的），不能被小字规则压掉 */
+    .micro-task-head h2,
+    .micro-task-head h2 span,
+    .micro-task-head h2 .bi-zh,
+    .micro-task-head h2 .bi-en {
+      font-size: 22px !important;
+      line-height: 1.25 !important;
+      color: var(--ink) !important;
+      font-weight: 400 !important;
+    }
+    .micro-task-head h2 .bi-en { display: none; }
+    .micro-task-head { margin: 30px 0 6px !important; }
 </style>
 </head>
 <body>
