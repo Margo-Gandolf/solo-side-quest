@@ -4225,6 +4225,22 @@ details > summary h3,
     }
     .custom-add { display: flex; align-items: center; justify-content: center; gap: 4px; }
 </style>
+
+<style>
+    /* 小任务：整张卡片都可以点开（封面就是卡片本体） */
+    .micro-task { padding: 0 !important; }
+    .micro-task .task-cover {
+      width: 100%;
+      min-height: 132px;
+      height: 100%;
+      padding: 14px 12px;
+      align-items: flex-start;
+      justify-content: space-between;
+      border-radius: inherit;
+    }
+    .micro-task .task-cover-copy { align-items: flex-start; }
+    .npc-badge { pointer-events: none; }
+</style>
 </head>
 <body>
 <div id="pi" role="presentation">
