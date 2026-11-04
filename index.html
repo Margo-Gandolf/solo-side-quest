@@ -4213,6 +4213,18 @@ details > summary h3,
       transform: none;
     }
 </style>
+
+<style>
+    .custom-add-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      object-fit: cover;
+      vertical-align: -8px;
+      margin-right: 2px;
+    }
+    .custom-add { display: flex; align-items: center; justify-content: center; gap: 4px; }
+</style>
 </head>
 <body>
 <div id="pi" role="presentation">
@@ -5792,7 +5804,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
               }).join('')}
             </div>` : ''}
           <button class="btn btn-secondary btn-wide custom-add" type="button" data-action="open-custom">
-            ${icon('feather', 16)} 给自己派个活
+            <img class="custom-add-icon" src="${SHARK_ICON}" alt=""> 给自己派个活
           </button>
         </section>
         ${ui.revealedTaskIds.has(mainTask.id) ? `
