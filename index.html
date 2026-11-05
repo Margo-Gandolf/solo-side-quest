@@ -3624,10 +3624,7 @@ details > summary h3,
 
 <style>
     /* 自己派的任务：在记录里单独标一下 */
-    .record.is-custom {
-      background: linear-gradient(0deg, rgba(253, 242, 201, .55), rgba(253, 242, 201, .55));
-      border-color: rgba(196, 150, 60, .28);
-    }
+    .record.is-custom { background: linear-gradient(0deg, rgba(253, 242, 201, .42), rgba(253, 242, 201, .42)); border-color: rgba(91, 55, 39, .07); box-shadow: 0 4px 12px rgba(108, 78, 52, .06); }
     .record.is-custom.is-done { opacity: .72; }
     .record.is-custom .record-date strong { font-size: 20px; color: #b0863c; }
 </style>
@@ -6102,9 +6099,21 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
         </div>`;
     }
 
+    // 自定义任务：从建立那天起，到截止日（没有截止日就当天）都在有效期内
+    function customActiveOn(item, dayKey) {
+      if (!item || !item.date) return false;
+      let end = item.date;
+      if (item.dueAt) {
+        const d = new Date(item.dueAt);
+        if (!isNaN(d.getTime())) end = dateKey(d);
+      }
+      if (end < item.date) end = item.date;
+      return item.date <= dayKey && dayKey <= end;
+    }
+
     function customTasksToday() {
       const key = dateKey();
-      return (state.customTasks || []).filter(item => item.date === key);
+      return (state.customTasks || []).filter(item => customActiveOn(item, key));
     }
 
     function formatGap(ms) {
@@ -6320,7 +6329,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
                 <div class="selected-day-head">
           <div>
             <p class="eyebrow">${formatDate(selectedDate)}</p>
-            <h2>${selectedRecords.length + (state.customTasks || []).filter(x => x.date === selectedDate).length} 项任务 · ${(state.diary || []).filter(x => x.date === selectedDate).length} 篇日记</h2>
+            <h2>${selectedRecords.length + (state.customTasks || []).filter(x => customActiveOn(x, selectedDate)).length} 项任务 · ${(state.diary || []).filter(x => x.date === selectedDate).length} 篇日记</h2>
           </div>
           
         </div>
@@ -6329,7 +6338,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
           <div class="day-col day-col-tasks">
             <p class="day-col-label">任务记录</p>
             ${(() => {
-              const custom = (state.customTasks || []).filter(x => x.date === selectedDate);
+              const custom = (state.customTasks || []).filter(x => customActiveOn(x, selectedDate));
               const blocks = [];
               custom.forEach((item) => {
                 blocks.push(`
@@ -6361,7 +6370,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
                     ${(record.photos && record.photos.length) ? `<div class="photo-grid">${record.photos.map(src => `<img class="photo-thumb" src="${src}" alt="">`).join('')}</div>` : ''}
                   </article>`);
               });
-              return blocks.length ? blocks.join('') : '<p class="day-empty">这天还没有任务记录</p>';
+              return blocks.length ? blocks.join('') : '<p class="day-empty">书架空空</p>';
             })()}
           </div>
 
@@ -6375,7 +6384,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
                   <p class="diary-page-head">${e.date} · ${weekdayName(e.date)} · ${formatClock(e.createdAt)}</p>
                   <p class="diary-page-text">${escapeHTML(e.text)}</p>
                   <span class="diary-page-fold"></span>
-                </article>`).join('') : '<p class="day-empty">这天还没有写日记</p>';
+                </article>`).join('') : '<p class="day-empty">日记空空</p>';
             })()}
           </div>
         </div>
