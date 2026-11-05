@@ -2662,7 +2662,7 @@
 .pi-sky path {
   fill: none;
   stroke: currentColor;
-  stroke-width: 2.6;
+  stroke-width: 1.7;
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-dasharray: var(--len);
@@ -2671,7 +2671,7 @@
   animation-delay: var(--d);
 }
 @keyframes piDraw { to { stroke-dashoffset: 0; } }
-.pi-sky .pi-sun { stroke-width: 1.8; }
+.pi-sky .pi-sun { stroke-width: 1.5; }
 .pi-sky .pi-sunfill {
   fill: #f7c95f;
   stroke: none;
@@ -4685,6 +4685,29 @@ details > summary h3,
       opacity: .96;
     }
 </style>
+
+<style>
+    .diary-new-page {
+      display: block;
+      width: 100%;
+      margin-top: 8px;
+      padding: 9px;
+      border: 1px dashed rgba(120, 88, 58, .28);
+      border-radius: 10px;
+      background: rgba(255, 253, 246, .7);
+      color: var(--forest-deep);
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      cursor: pointer;
+    }
+    /* 输入框 16px，避免 iOS 聚焦时自动放大页面且不还原 */
+    .sheet.diary-sheet .diary-input {
+      font-size: 16px !important;
+      line-height: 30px !important;
+    }
+    .sheet .control[name="note"] { font-size: 16px; }
+</style>
 </head>
 <body>
 <div id="pi" role="presentation">
@@ -5753,6 +5776,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
       customEditingId: '',
       diaryOpenId: null,
       diaryEditOpen: false,
+      diaryEditId: null,
       mapSeed: String(Date.now()) + Math.random(),
       recordEditingKey: null,
       recordDraft: { quickPhrase: '', note: '' },
@@ -6470,12 +6494,14 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
     function renderDiaryEditor() {
       if (!ui.diaryEditOpen) return '';
       const todayKey = dateKey();
-      const entry = (state.diary || []).filter((e) => e.date === todayKey)[0];
+      const entry = ui.diaryEditId
+        ? (state.diary || []).filter((e) => e.id === ui.diaryEditId)[0]
+        : null;
       return `
         <div class="overlay" data-action="close-diary-edit">
           <section class="sheet diary-sheet" role="dialog" aria-modal="true" data-stop-close>
             <div class="diary-sheet-paper">
-              <p class="diary-sheet-date">${formatDate(todayKey, true)}</p>
+              <p class="diary-sheet-date">${formatDate(entry ? entry.date : todayKey, true)}</p>
               ${entry ? `<p class="diary-sheet-time">${formatClock(entry.createdAt)}</p>` : ''}
               <img class="diary-sheet-girl" src="${GIRL_ART}" alt="">
               <textarea class="control diary-input" id="diary-input" maxlength="1000"
@@ -6483,7 +6509,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
             </div>
             <div class="btn-row">
               <button class="btn btn-secondary btn-wide" data-action="close-diary-edit">先不写</button>
-              <button class="btn btn-primary btn-wide" data-action="save-diary">${entry ? '存一下改动' : '记下来'}</button>
+              <button class="btn btn-primary btn-wide" data-action="save-diary">${entry ? '存一下改动' : '记下这一页'}</button>
             </div>
           </section>
         </div>`;
@@ -6828,7 +6854,8 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
                     <span class="news-meta">${formatClock(e.createdAt)}</span>
                   </article>`;
               }).join('');
-              return `<div class="paper-rack"><div class="rack-stack">${papers.length ? papers : '<p class="rack-empty">日记空空</p>'}</div><span class="rack-pocket">日记架</span></div>`;
+              return `<div class="paper-rack"><div class="rack-stack">${papers.length ? papers : '<p class="rack-empty">日记空空</p>'}</div><span class="rack-pocket">日记架</span></div>
+                <button class="diary-new-page" data-action="new-diary-page">＋ 新的一页</button>`;
             })()}
           </div>
         </div>
@@ -7814,7 +7841,9 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
           return;
         }
         const day = dateKey();
-        const existing = (state.diary || []).filter((e) => e.date === day)[0];
+        const existing = ui.diaryEditId
+          ? (state.diary || []).filter((e) => e.id === ui.diaryEditId)[0]
+          : null;
         if (existing) {
           existing.text = text;
           existing.updatedAt = new Date().toISOString();
@@ -7828,11 +7857,21 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
         }
         saveSafely(true);
         ui.diaryEditOpen = false;
+        ui.diaryEditId = null;
         render();
         showToast(existing ? '改好了。' : '记下了。');
         return;
       }
       if (action === 'open-diary-edit') {
+        const todayEntry = (state.diary || []).filter((e) => e.date === dateKey())[0];
+        ui.diaryEditId = todayEntry ? todayEntry.id : null;
+        ui.diaryEditOpen = true;
+        render();
+        setTimeout(() => { const b = document.getElementById('diary-input'); if (b) b.focus(); }, 60);
+        return;
+      }
+      if (action === 'new-diary-page') {
+        ui.diaryEditId = null;
         ui.diaryEditOpen = true;
         render();
         setTimeout(() => { const b = document.getElementById('diary-input'); if (b) b.focus(); }, 60);
@@ -7840,6 +7879,7 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
       }
       if (action === 'close-diary-edit') {
         ui.diaryEditOpen = false;
+        ui.diaryEditId = null;
         render();
         return;
       }
