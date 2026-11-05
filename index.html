@@ -4789,6 +4789,45 @@ details > summary h3,
       margin-right: 6px;
     }
 </style>
+
+<style>
+    .btn-compact {
+      min-width: 172px;
+      padding-inline: 22px;
+    }
+    .sheet-actions { justify-content: center; }
+    .diary-pager {
+      display: flex !important;
+      justify-content: center;
+      margin: 14px 0 2px !important;
+    }
+</style>
+
+<style>
+    .btn-compact {
+      flex: 0 0 auto !important;
+      width: auto !important;
+      min-width: 168px;
+      padding-inline: 22px;
+    }
+</style>
+
+<style>
+    /* 日记里的小姑娘：缩到背景里当水印，不挤占输入区 */
+    .diary-sheet-girl {
+      height: 38% !important;
+      max-height: 150px;
+      right: 2px !important;
+      bottom: 4px !important;
+      opacity: 1 !important;
+      z-index: 0;
+    }
+    .sheet.diary-sheet .diary-input {
+      padding-right: 0 !important;
+      position: relative;
+      z-index: 1;
+    }
+</style>
 </head>
 <body>
 <div id="pi" role="presentation">
@@ -6583,6 +6622,18 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
           <section class="sheet diary-sheet" role="dialog" aria-modal="true" data-stop-close>
             <div class="diary-sheet-paper">
               <p class="diary-sheet-date">${formatDate(entry ? entry.date : todayKey, true)}</p>
+              ${entry ? `<p class="diary-sheet-time">${formatClock(entry.createdAt)}</p>` : ''}
+              <img class="diary-sheet-girl" src="${GIRL_ART}" alt="">
+              <textarea class="control diary-input" id="diary-input" maxlength="1000"
+                placeholder="今天发生了什么？想到什么写什么。">${escapeHTML(entry ? entry.text : '')}</textarea>
+            </div>
+            <div class="btn-row">
+              ${entry
+                ? `<button class="btn btn-primary btn-wide" data-action="save-diary">存一下改动</button>
+                   <button class="btn btn-secondary btn-wide btn-full" data-action="save-and-new-diary">保存当前页并翻开空白页</button>`
+                : `<button class="btn btn-secondary btn-wide" data-action="close-diary-edit">先不写</button>
+                   <button class="btn btn-primary btn-wide" data-action="save-diary">记下这一页</button>`}
+            </div>
               ${(() => {
                 const pages = (state.diary || []).filter((e) => e.date === todayKey)
                   .sort((a, b) => String(a.createdAt || '').localeCompare(String(b.createdAt || '')));
@@ -6596,18 +6647,6 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
                     <button class="diary-pager-btn" data-action="diary-next" aria-label="下一篇">›</button>
                   </div>`;
               })()}
-              ${entry ? `<p class="diary-sheet-time">${formatClock(entry.createdAt)}</p>` : ''}
-              <img class="diary-sheet-girl" src="${GIRL_ART}" alt="">
-              <textarea class="control diary-input" id="diary-input" maxlength="1000"
-                placeholder="今天发生了什么？想到什么写什么。">${escapeHTML(entry ? entry.text : '')}</textarea>
-            </div>
-            <div class="btn-row">
-              ${entry
-                ? `<button class="btn btn-primary btn-wide" data-action="save-diary">存一下改动</button>
-                   <button class="btn btn-secondary btn-wide btn-full" data-action="save-and-new-diary">保存当前页并翻开空白页</button>`
-                : `<button class="btn btn-secondary btn-wide" data-action="close-diary-edit">先不写</button>
-                   <button class="btn btn-primary btn-wide" data-action="save-diary">记下这一页</button>`}
-            </div>
           </section>
         </div>`;
     }
@@ -6777,18 +6816,6 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
         <div class="overlay" data-action="close-record">
           <section class="sheet record-sheet" role="dialog" aria-modal="true" aria-labelledby="record-title" data-stop-close style="background-color:${noteBg}">
             ${head}
-            ${(() => {
-                const dayList = state.records.filter((r) => r.done && r.date === record.date)
-                  .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
-                if (dayList.length < 2) return '';
-                const idx = dayList.findIndex((r) => r.createdAt === ui.recordViewKey);
-                return `
-                  <div class="diary-pager">
-                    <button class="diary-pager-btn" type="button" data-action="record-prev" aria-label="上一条">‹</button>
-                    <span class="diary-pager-count">${idx + 1} / ${dayList.length}</span>
-                    <button class="diary-pager-btn" type="button" data-action="record-next" aria-label="下一条">›</button>
-                  </div>`;
-              })()}
             <form data-form="record-edit" data-key="${escapeHTML(record.createdAt)}">
               <div class="field">
                 <span class="field-label">此刻的感觉 <em>可跳过</em></span>
@@ -6819,6 +6846,14 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
             </div></div>
           <section class="sheet record-sheet" role="dialog" aria-modal="true" aria-labelledby="record-title" data-stop-close style="background-color:${noteBg}">
             ${head}
+            <p class="record-detail-desc">${escapeHTML(t.desc || '')}</p>
+            
+            ${record.quickPhrase ? `<p class="record-note">${escapeHTML(record.quickPhrase)}</p>` : ''}
+            ${record.note ? `<p class="record-note user-text">${escapeHTML(record.note)}</p>` : ''}
+            ${(record.photos && record.photos.length ? record.photos : (record.photo ? [record.photo] : [])).map((src, i) => `<img class="record-detail-photo" src="${src}" alt="${escapeHTML(t.name)}的照片 ${i + 1}">`).join('')}
+            <div class="sheet-actions">
+              <button type="button" class="btn btn-secondary btn-compact" data-action="edit-record"><svg class="edit-pencil" viewBox="0 0 32 32" width="23" height="23" aria-hidden="true" fill="none"><path d="M21.6 6.2l3.6 3.6-9.6 9.6-4.3 1 1-4.3 9.3-9.9z" fill="#e8b45a" stroke="#8a6a4a" stroke-width="1.8" stroke-linejoin="round"/><path d="M9.9 20.4l4.3-1" stroke="#8a6a4a" stroke-width="1.5" stroke-linecap="round" opacity=".6"/><path d="M20.2 7.6l3.6 3.6" stroke="#8a6a4a" stroke-width="1.5" stroke-linecap="round" opacity=".55"/></svg> 编辑记录</button>
+            </div>
             ${(() => {
                 const dayList = state.records.filter((r) => r.done && r.date === record.date)
                   .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
@@ -6831,14 +6866,6 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
                     <button class="diary-pager-btn" type="button" data-action="record-next" aria-label="下一条">›</button>
                   </div>`;
               })()}
-            <p class="record-detail-desc">${escapeHTML(t.desc || '')}</p>
-            
-            ${record.quickPhrase ? `<p class="record-note">${escapeHTML(record.quickPhrase)}</p>` : ''}
-            ${record.note ? `<p class="record-note user-text">${escapeHTML(record.note)}</p>` : ''}
-            ${(record.photos && record.photos.length ? record.photos : (record.photo ? [record.photo] : [])).map((src, i) => `<img class="record-detail-photo" src="${src}" alt="${escapeHTML(t.name)}的照片 ${i + 1}">`).join('')}
-            <div class="sheet-actions">
-              <button type="button" class="btn btn-secondary btn-wide" data-action="edit-record"><svg class="edit-pencil" viewBox="0 0 32 32" width="20" height="20" aria-hidden="true" fill="none"><path d="M21.6 6.2l3.6 3.6-9.6 9.6-4.3 1 1-4.3 9.3-9.9z" fill="#e8b45a" stroke="#8a6a4a" stroke-width="1.8" stroke-linejoin="round"/><path d="M9.9 20.4l4.3-1" stroke="#8a6a4a" stroke-width="1.5" stroke-linecap="round" opacity=".6"/><path d="M20.2 7.6l3.6 3.6" stroke="#8a6a4a" stroke-width="1.5" stroke-linecap="round" opacity=".55"/></svg> 编辑记录</button>
-            </div>
           </section>
         </div>
         </div>`;
