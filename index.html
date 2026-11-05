@@ -2005,9 +2005,9 @@
       z-index: 80;
       inset: 0;
       display: flex;
-      align-items: flex-end;
+      align-items: center;
       justify-content: center;
-      padding: 16px 16px calc(16px + var(--safe-bottom));
+      padding: 24px 16px calc(24px + var(--safe-bottom));
       background: rgba(29,43,37,.34);
       backdrop-filter: blur(4px);
       animation: fadeIn .18s ease both;
@@ -4393,6 +4393,39 @@ details > summary h3,
       text-align: center;
       color: var(--ink-faint);
       font-size: 11.5px;
+    }
+</style>
+
+<style>
+    /* 详情卡：手账撕边 */
+    .sheet.record-sheet {
+      border-radius: 6px 14px 8px 12px !important;
+      box-shadow: 0 0 0 6px rgba(255, 253, 246, .95), 0 16px 30px rgba(60, 38, 30, .20) !important;
+      filter: url(#torn);
+      transform: rotate(-.8deg);
+    }
+    .sheet.diary-sheet .diary-sheet-paper {
+      border-radius: 6px 12px 8px 10px !important;
+      filter: url(#torn);
+    }
+</style>
+
+
+<style>
+    /* ===== 详情卡：手剪撕边 ===== */
+    .sheet.record-sheet {
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      filter: drop-shadow(0 0 1px #fffdf6) drop-shadow(0 0 1px #fffdf6)
+              drop-shadow(0 0 2px #fffdf6) drop-shadow(0 10px 18px rgba(60, 38, 30, .20)) !important;
+      clip-path: polygon(0.00% 0.13%, 10.76% 0.24%, 21.82% 0.08%, 33.00% 0.26%, 44.11% 0.11%, 55.80% 0.00%, 66.96% 0.00%, 77.30% 0.00%, 89.34% 0.26%, 99.99% 0.00%, 100.00% 11.57%, 99.99% 22.56%, 99.91% 33.33%, 100.00% 44.93%, 99.68% 55.99%, 100.00% 66.91%, 100.00% 77.75%, 99.69% 88.84%, 100.00% 100.00%, 88.52% 99.81%, 78.13% 99.67%, 66.78% 100.00%, 56.04% 99.69%, 44.67% 99.79%, 32.90% 99.93%, 22.47% 99.68%, 11.06% 100.00%, 0.01% 100.00%, 0.30% 88.72%, 0.13% 78.09%, 0.00% 66.81%, 0.00% 55.89%, 0.08% 44.65%, 0.00% 33.27%, 0.29% 21.87%, 0.06% 11.08%);
+      transform: rotate(-.7deg);
+    }
+    .sheet.diary-sheet .diary-sheet-paper {
+      border-radius: 0 !important;
+      box-shadow: inset 0 0 0 1px rgba(91, 55, 39, .08) !important;
+      filter: drop-shadow(0 10px 18px rgba(60, 38, 30, .18));
+      clip-path: polygon(0.00% 0.13%, 10.76% 0.24%, 21.82% 0.08%, 33.00% 0.26%, 44.11% 0.11%, 55.80% 0.00%, 66.96% 0.00%, 77.30% 0.00%, 89.34% 0.26%, 99.99% 0.00%, 100.00% 11.57%, 99.99% 22.56%, 99.91% 33.33%, 100.00% 44.93%, 99.68% 55.99%, 100.00% 66.91%, 100.00% 77.75%, 99.69% 88.84%, 100.00% 100.00%, 88.52% 99.81%, 78.13% 99.67%, 66.78% 100.00%, 56.04% 99.69%, 44.67% 99.79%, 32.90% 99.93%, 22.47% 99.68%, 11.06% 100.00%, 0.01% 100.00%, 0.30% 88.72%, 0.13% 78.09%, 0.00% 66.81%, 0.00% 55.89%, 0.08% 44.65%, 0.00% 33.27%, 0.29% 21.87%, 0.06% 11.08%);
     }
 </style>
 </head>
@@ -7891,7 +7924,11 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
       <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="noise"/>
       <feDisplacementMap in="SourceGraphic" in2="noise" scale="2" xChannelSelector="R" yChannelSelector="G"/>
     </filter>
-  </defs>
+  <filter id="torn-big" x="-12%" y="-12%" width="124%" height="124%" color-interpolation-filters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="0.022" numOctaves="2" seed="17" result="noise"/>
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="7" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+    </defs>
 </svg>
 </body>
 </html>
