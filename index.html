@@ -4856,6 +4856,14 @@ details > summary h3,
       color: rgba(154, 133, 112, .9);
     }
 </style>
+
+<style>
+    .news-paper.is-overdue .news-tab {
+      border-color: rgba(179, 79, 61, .35);
+      color: #8c4433;
+    }
+    .news-paper.is-overdue .news-meta { color: rgba(179, 79, 61, .85); }
+</style>
 </head>
 <body>
 <div id="pi" role="presentation">
@@ -6422,8 +6430,11 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
                 const due = item.dueAt ? new Date(item.dueAt) : null;
                 const left = due ? due.getTime() - Date.now() : 0;
                 const overdue = due && !item.done && left < 0;
+                const overdueMs = overdue ? -left : 0;
                 const label = !due ? '' : item.done ? '' :
-                  (overdue ? `已过 ${formatGap(-left)}` : `还有 ${formatGap(left)}`);
+                  (overdue
+                    ? (overdueMs >= 86400000 ? `逾期 ${formatOverdue(overdueMs)}` : `已过 ${formatOverdue(overdueMs)}`)
+                    : `还有 ${formatGap(left)}`);
                 return `
                   <article class="custom-task tone-${index % 4} ${item.done ? 'is-done' : ''} ${overdue ? 'is-overdue' : ''}">
                     ${index === 0 ? `<img class="custom-figure" src="${GIRL_ART}" alt="">` : ''}
@@ -6766,16 +6777,28 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
         </div>`;
     }
 
-    // 自定义任务：从建立那天起，到截止日（没有截止日就当天）都在有效期内
+    // 自定义任务的截止日期
+    function customDueKey(item) {
+      if (!item || !item.dueAt) return item ? item.date : null;
+      const d = new Date(item.dueAt);
+      if (isNaN(d.getTime())) return item.date;
+      return dateKey(d) < item.date ? item.date : dateKey(d);
+    }
+
+    // 过期但没打勾的，算「过时」
+    function customOverdue(item) {
+      if (!item || item.done) return false;
+      const end = customDueKey(item);
+      return !!end && end < dateKey();
+    }
+
+    // 自定义任务：有效期内每天都显示；过时了但没完成，就一直挂在今天
     function customActiveOn(item, dayKey) {
       if (!item || !item.date) return false;
-      let end = item.date;
-      if (item.dueAt) {
-        const d = new Date(item.dueAt);
-        if (!isNaN(d.getTime())) end = dateKey(d);
-      }
-      if (end < item.date) end = item.date;
-      return item.date <= dayKey && dayKey <= end;
+      if (dayKey < item.date) return false;
+      const end = customDueKey(item);
+      if (dayKey <= end) return true;
+      return !item.done && dayKey === dateKey();
     }
 
     function customTasksToday() {
@@ -6789,6 +6812,17 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
       const hours = Math.floor(mins / 60);
       const rest = mins % 60;
       return rest ? `${hours} 小时 ${rest} 分` : `${hours} 小时`;
+    }
+
+    // 超期显示：不到一天用小时，超过一天改成「天 + 小时」
+    function formatOverdue(ms) {
+      const mins = Math.max(0, Math.round(ms / 60000));
+      if (mins < 60) return `${mins} 分钟`;
+      const hours = Math.floor(mins / 60);
+      if (hours < 24) return `${hours} 小时`;
+      const days = Math.floor(hours / 24);
+      const restH = hours % 24;
+      return restH ? `${days} 天 ${restH} 小时` : `${days} 天`;
     }
 
     function checkCustomDue() {
@@ -7031,9 +7065,9 @@ K23|一个主题的半天|选一个主题比如门出门拍十张|90|可选照�
               const papers = [];
               custom.forEach((item) => {
                 papers.push(`
-                  <article class="news-paper pc-${papers.length % 4} pat-${papers.length % 2 ? 'dots' : 'lines'} ${item.done ? 'is-done' : ''}" data-action="open-custom-view" data-id="${item.id}" role="button" tabindex="0">
+                  <article class="news-paper pc-${papers.length % 4} pat-${papers.length % 2 ? 'dots' : 'lines'} ${item.done ? 'is-done' : ''} ${customOverdue(item) ? 'is-overdue' : ''}" data-action="open-custom-view" data-id="${item.id}" role="button" tabindex="0">
                     <span class="news-tab">${escapeHTML(item.title)}</span>
-                    <span class="news-meta">自己派${item.done ? ' · 已完成' : ''}</span>
+                    <span class="news-meta">${item.done ? '已完成' : customOverdue(item) ? '已过时' : '自己派'}</span>
                   </article>`);
               });
               selectedRecords.forEach((record) => {
